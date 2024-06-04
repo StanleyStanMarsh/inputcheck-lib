@@ -15,33 +15,58 @@
 
 #if defined(__cplusplus) && __cplusplus >= 201703L
 
+#define REGEX const std::regex
+#define ALPHA_SET(_type) const std::set<_type>
+
 #include <iostream>
 #include <set>
 #include <algorithm>
 #include <exception>
+#include <regex>
+
+namespace rgxp {
+    inline REGEX contain_digit("\\d+");
+
+    inline REGEX number(R"(/^\d{1,}$/)");
+
+    inline REGEX email("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}");
+
+    inline REGEX url(R"(https?://(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-zA-Z0-9]{2,6})");
+
+    inline REGEX date_YYYY_MM_DD(R"(\d{4}-\d{2}-\d{2})");
+
+    inline REGEX date_any(R"(/^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)
+(?:0?[1,3-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?
+(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)
+(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$/)");
+
+    inline REGEX phone_number(R"(\+?\d{1,3}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9})");
+
+    inline REGEX hex(R"(/^#?([a-f0-9]{6}|[a-f0-9]{3})$/)");
+}
 
 namespace inpch {
 
     inline const int any_length = -1;
 
-    inline const std::set<char> eng_alphabet{
+    inline ALPHA_SET(char) eng_alphabet{
             'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
             'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
     };
 
-    inline const std::set<CYRILLIC_CHAR_TYPE> rus_alphabet{
+    inline ALPHA_SET(CYRILLIC_CHAR_TYPE) rus_alphabet{
             PFX(а), PFX(б), PFX(в), PFX(г), PFX(д), PFX(е), PFX(ё), PFX(ж),
             PFX(з), PFX(и), PFX(й), PFX(к), PFX(л), PFX(м), PFX(н), PFX(о),
             PFX(п), PFX(р), PFX(с), PFX(т), PFX(у), PFX(ф), PFX(х), PFX(ц),
             PFX(ч), PFX(ш), PFX(щ), PFX(ъ), PFX(ы), PFX(ь), PFX(э), PFX(ю), PFX(я)
     };
 
-    inline const std::set<char> ENG_alphabet{
+    inline ALPHA_SET(char) ENG_alphabet{
             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
             'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
     };
 
-    inline const std::set<CYRILLIC_CHAR_TYPE> RUS_alphabet{
+    inline ALPHA_SET(CYRILLIC_CHAR_TYPE) RUS_alphabet{
             PFX(А), PFX(Б), PFX(В), PFX(Г), PFX(Д), PFX(Е), PFX(Ё), PFX(Ж),
             PFX(З), PFX(И), PFX(Й), PFX(К), PFX(Л), PFX(М), PFX(Н), PFX(О),
             PFX(П), PFX(Р), PFX(С), PFX(Т), PFX(У), PFX(Ф), PFX(Х), PFX(Ц),
@@ -121,6 +146,17 @@ namespace inpch {
     content_type content_type_of(const std::string &content_string);
     content_type content_type_of(const std::wstring  &content_string);
 
+    bool input_match(const std::string &input_string, const std::string &regex_string);
+    bool input_match(const std::string &input_string, const std::regex &regex);
+
+    int int_input_loop(const int &l, const int &r, const std::string &err, bool in_range = true);
+    int int_input_loop(const int &l, const int &r, const std::wstring &err, bool in_range = true);
+
+    std::string str_num_input_loop(const base_type &number_base, const std::string &err, const int &length = any_length);
+    std::wstring wstr_num_input_loop(const base_type &number_base, const std::wstring &err, const int &length = any_length);
+
+
+
     template<class T>
     class input_check {
     public:
@@ -138,14 +174,14 @@ namespace inpch {
         bool correct;
         T value;
 
-        bool eng_lang_check(const T &str, const std::set<char> &alpha);
+        bool eng_lang_check(const T &str, ALPHA_SET(char) &alpha);
 
-        bool rus_lang_check(const T &str, const std::set<CYRILLIC_CHAR_TYPE> &alpha);
+        bool rus_lang_check(const T &str, ALPHA_SET(CYRILLIC_CHAR_TYPE) &alpha);
 
-        bool eng_lang_check(const T &str, const std::set<char> &alpha_upper, const std::set<char> &alpha_lower);
+        bool eng_lang_check(const T &str, ALPHA_SET(char) &alpha_upper, ALPHA_SET(char) &alpha_lower);
 
-        bool rus_lang_check(const T &str, const std::set<CYRILLIC_CHAR_TYPE> &alpha_upper,
-                            const std::set<CYRILLIC_CHAR_TYPE> &alpha_lower);
+        bool rus_lang_check(const T &str, ALPHA_SET(CYRILLIC_CHAR_TYPE) &alpha_upper,
+                            ALPHA_SET(CYRILLIC_CHAR_TYPE) &alpha_lower);
     };
 
     /* -------------------------------- Declarations -------------------------------- */
@@ -408,7 +444,7 @@ namespace inpch {
     }
 
     template<class T>
-    bool input_check<T>::eng_lang_check(const T &str, const std::set<char> &alpha) {
+    bool input_check<T>::eng_lang_check(const T &str, ALPHA_SET(char) &alpha) {
         if
                 (
                 std::all_of(str.begin(), str.end(),
@@ -423,7 +459,7 @@ namespace inpch {
     }
 
     template<class T>
-    bool input_check<T>::rus_lang_check(const T &str, const std::set<CYRILLIC_CHAR_TYPE> &alpha) {
+    bool input_check<T>::rus_lang_check(const T &str, ALPHA_SET(CYRILLIC_CHAR_TYPE) &alpha) {
         if
                 (
                 std::all_of(str.begin(), str.end(),
@@ -439,7 +475,7 @@ namespace inpch {
 
     template<class T>
     bool
-    input_check<T>::eng_lang_check(const T &str, const std::set<char> &alpha_upper, const std::set<char> &alpha_lower) {
+    input_check<T>::eng_lang_check(const T &str, ALPHA_SET(char) &alpha_upper, ALPHA_SET(char) &alpha_lower) {
         for (const auto &ch: str) {
             if (alpha_upper.find(ch) == alpha_upper.end() || alpha_lower.find(ch) == alpha_lower.end()) {
                 return false;
@@ -449,8 +485,8 @@ namespace inpch {
     }
 
     template<class T>
-    bool input_check<T>::rus_lang_check(const T &str, const std::set<CYRILLIC_CHAR_TYPE> &alpha_upper,
-                                        const std::set<CYRILLIC_CHAR_TYPE> &alpha_lower) {
+    bool input_check<T>::rus_lang_check(const T &str, ALPHA_SET(CYRILLIC_CHAR_TYPE) &alpha_upper,
+                                        ALPHA_SET(CYRILLIC_CHAR_TYPE) &alpha_lower) {
         for (const auto &ch: str) {
             if (alpha_upper.find(ch) == alpha_upper.end() || alpha_lower.find(ch) == alpha_lower.end()) {
                 return false;
